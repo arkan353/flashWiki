@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - FlashWiki</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/static/api.js"></script>
+</head>
+<body>
+    <header>
+        <h1>FlashWiki — Панель администратора</h1>
+    </header>
+
+    <div class="login-modal">
+        <div class="modal_content">
+            <h2>Вход в панель администратора</h2>
+            <input type="text" placeholder="Имя пользователя">
+            <input type="password" placeholder="Пароль">
+            <button>Войти</button>
+        </div>
+    </div>
+    <main>
+        <div id="notify" class="notify"></div>
+        <p>Здесь будут просмотры предложенных статей, управление тегами и организациями.</p>
+    </main>
+</body>
+</html>

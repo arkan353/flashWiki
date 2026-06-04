@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor - FlashWiki</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1>FlashWiki — Редактор статей</h1>
+    </header>
+    <main>
+        <p>Здесь будет визуальный/маркировочный редактор (Markdown + WYSIWYG).</p>
+        <p>Демо: поле заголовка, поле содержимого и кнопка отправки.</p>
+        <div id="notify" class="notify"></div>
+        <form id="articleForm">
+            <input type="text" id="title" placeholder="Заголовок" required />
+            <textarea id="content" placeholder="Содержимое (Markdown)"></textarea>
+            <input type="text" id="tags" placeholder="Теги через запятую" />
+            <input type="file" id="coverFile" accept="image/*" />
+            <button type="submit">Отправить на проверку</button>
+        </form>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="/static/api.js"></script>
+    <script>
+        document.getElementById('articleForm').addEventListener('submit', async (e)=>{
+            e.preventDefault();
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            const tags = document.getElementById('tags').value.split(',').map(s=>s.trim()).filter(Boolean);
+            const fileInput = document.getElementById('coverFile');
+            api.notify('Отправка...', 'info');
+            let cover_url = null;
+            try{
+                if(fileInput && fileInput.files && fileInput.files[0]){
+                    const up = await api.uploadImage(fileInput.files[0]);
+                    if(up && up.success){ cover_url = up.url; }
+                    else { api.notify((up && up.message) || 'Ошибка загрузки', 'error'); return; }
+                }
+
+                const res = await api.createArticle({title, content, tags, cover_image: cover_url});
+                if(res && res.success){ api.notify('Статья отправлена', 'success'); }
+                else api.notify((res && res.message) || 'Ошибка создания', 'error');
+            }catch(err){ api.notify(err.message || 'Ошибка', 'error'); }
+        })
+    </script>
+</body>
+</html>
