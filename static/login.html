@@ -6,10 +6,12 @@
     <title>Login - FlashWiki</title>
     <link rel="stylesheet" href="/static/style.css">
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="/static/api.js"></script>
 </head>
 <body>
     <main>
         <h1>Вход</h1>
+        <div id="notify" class="notify"></div>
         <form id="loginForm">
             <input type="email" id="email" placeholder="Email" required />
             <input type="password" id="password" placeholder="Пароль" required />
@@ -21,26 +23,20 @@
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            try{
-                const res = await axios.post('/api/login', {email, password});
-                if(res.data && res.data.success){
-                    window.location.href = '/';
-                }else{
-                    alert(JSON.stringify(res.data));
-                }
-            }catch(err){
-                const msg = err.response ? err.response.data : err.message;
-                alert(JSON.stringify(msg));
+            const res = await api.login(email, password);
+            if (res.success) {
+                api.notify('Вы успешно вошли', 'success');
+                setTimeout(() => window.location.href = '/', 500);
+            } else {
+                api.notify(res.message || 'Ошибка входа', 'error');
             }
         });
 
         (async ()=>{
-            try{
-                const r = await axios.get('/api/user/profile');
-                if(r.data && r.data.success){
-                    window.location.href = '/';
-                }
-            }catch(e){/* not logged in */}
+            const r = await api.getProfile();
+            if(r.success){
+                window.location.href = '/';
+            }
         })();
     </script>
 </body>

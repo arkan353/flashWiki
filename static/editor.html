@@ -11,13 +11,17 @@
         <h1>FlashWiki — Редактор статей</h1>
     </header>
     <main>
-        <p>Здесь будет визуальный/маркировочный редактор (Markdown + WYSIWYG).</p>
-        <p>Демо: поле заголовка, поле содержимого и кнопка отправки.</p>
+        <div class="editor-header">
+            <h1>FlashWiki — Редактор статей</h1>
+            <p class="editor-subtitle">Отправляйте материалы на проверку, прикрепляйте обложки и теги.</p>
+        </div>
         <div id="notify" class="notify"></div>
+        <div id="editor-status" class="editor-status">Проверка авторизации...</div>
         <form id="articleForm">
             <input type="text" id="title" placeholder="Заголовок" required />
-            <textarea id="content" placeholder="Содержимое (Markdown)"></textarea>
+            <textarea id="content" placeholder="Содержимое (Markdown)" required></textarea>
             <input type="text" id="tags" placeholder="Теги через запятую" />
+            <label for="coverFile">Обложка (опционально)</label>
             <input type="file" id="coverFile" accept="image/*" />
             <button type="submit">Отправить на проверку</button>
         </form>
@@ -25,7 +29,21 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="/static/api.js"></script>
     <script>
-        document.getElementById('articleForm').addEventListener('submit', async (e)=>{
+        const articleForm = document.getElementById('articleForm');
+        const editorStatus = document.getElementById('editor-status');
+
+        async function checkEditorAccess() {
+            const profile = await api.getProfile();
+            if (profile.success) {
+                editorStatus.textContent = `Автор: ${profile.user.name || profile.user.email}`;
+                articleForm.style.display = 'block';
+            } else {
+                editorStatus.textContent = 'Требуется вход в систему. Пожалуйста, войдите через главную страницу.';
+                articleForm.style.display = 'none';
+            }
+        }
+
+        articleForm.addEventListener('submit', async (e)=>{
             e.preventDefault();
             const title = document.getElementById('title').value;
             const content = document.getElementById('content').value;
@@ -41,10 +59,12 @@
                 }
 
                 const res = await api.createArticle({title, content, tags, cover_image: cover_url});
-                if(res && res.success){ api.notify('Статья отправлена', 'success'); }
+                if(res && res.success){ api.notify('Статья отправлена', 'success'); articleForm.reset(); }
                 else api.notify((res && res.message) || 'Ошибка создания', 'error');
             }catch(err){ api.notify(err.message || 'Ошибка', 'error'); }
-        })
+        });
+
+        checkEditorAccess();
     </script>
 </body>
 </html>

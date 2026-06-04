@@ -10,20 +10,62 @@
 </head>
 <body>
     <header>
-        <h1>FlashWiki — Панель администратора</h1>
+        <div class="page-header">
+            <h1>Панель администратора FlashWiki</h1>
+            <p>Управление предложенными статьями, тегами и организациями.</p>
+        </div>
     </header>
 
-    <div class="login-modal">
-        <div class="modal_content">
-            <h2>Вход в панель администратора</h2>
-            <input type="text" placeholder="Имя пользователя">
-            <input type="password" placeholder="Пароль">
-            <button>Войти</button>
-        </div>
-    </div>
     <main>
         <div id="notify" class="notify"></div>
-        <p>Здесь будут просмотры предложенных статей, управление тегами и организациями.</p>
+        <div id="admin-status" class="editor-status">Проверка прав доступа...</div>
+        <section class="card admin-panel">
+            <h2>Статьи в песочнице</h2>
+            <div id="sandboxList" class="sandbox-list">Загрузка...</div>
+        </section>
     </main>
+    <script>
+        const adminStatus = document.getElementById('admin-status');
+        const sandboxList = document.getElementById('sandboxList');
+
+        async function renderSandbox() {
+            const profile = await api.getProfile();
+            if (!profile.success) {
+                adminStatus.textContent = 'Требуется авторизация. Войдите на главной странице.';
+                sandboxList.innerHTML = '<div class="empty-state">Доступ закрыт.</div>';
+                return;
+            }
+            adminStatus.textContent = `Админ: ${profile.user.name || profile.user.email}`;
+            const sandbox = await api.getSandbox();
+            if (!sandbox || sandbox.success === false) {
+                sandboxList.innerHTML = `<div class="empty-state">${sandbox.message || 'Не удалось загрузить данные.'}</div>`;
+                return;
+            }
+            if (!Array.isArray(sandbox) || sandbox.length === 0) {
+                sandboxList.innerHTML = '<div class="empty-state">Нет статей в песочнице.</div>';
+                return;
+            }
+            sandboxList.innerHTML = sandbox.map(article => `
+                <div class="sandbox-card card">
+                    <div class="sandbox-card__title">${article.title || 'Без названия'}</div>
+                    <div class="sandbox-card__meta">ID: ${article.id || 'n/a'} — ${article.tags ? article.tags.join(', ') : 'нет тегов'}</div>
+                    <p>${article.content ? article.content.slice(0, 180) + '...' : 'Описание отсутствует'}</p>
+                    <button onclick="approveArticle(${article.id})">Одобрить статью</button>
+                </div>
+            `).join('');
+        }
+
+        async function approveArticle(articleId) {
+            const result = await api.approveArticle(articleId);
+            if (result.success) {
+                api.notify('Статья одобрена', 'success');
+                renderSandbox();
+            } else {
+                api.notify(result.message || 'Ошибка одобрения', 'error');
+            }
+        }
+
+        renderSandbox();
+    </script>
 </body>
 </html>

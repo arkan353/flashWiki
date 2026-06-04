@@ -1,6 +1,7 @@
 // Centralized frontend API functions using axios
 const api = (function(){
     const client = axios.create();
+    client.defaults.withCredentials = true;
 
     function handleError(err){
         if(err && err.response && err.response.data) return err.response.data;
@@ -11,7 +12,7 @@ const api = (function(){
         const el = document.getElementById('notify');
         if(!el) return console.log(type, message);
         el.textContent = message;
-        el.className = 'notify '+type;
+        el.className = 'notify show '+type;
         setTimeout(()=>{ el.textContent=''; el.className='notify'; }, 4000);
     }
 
